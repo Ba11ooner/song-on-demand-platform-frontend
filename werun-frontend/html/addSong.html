@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <script src="../js/vue.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/app.js"></script>
+    <title>点歌页面</title>
+</head>
+<body>
+<ul class="nav" style="border: #0a53be 1px solid;border-radius: 10px;width: 6%;margin-left: 6%;margin-top: 1%">
+    <li class="nav-item">
+        <a class="nav-link" href="vote.html" style="font-size: 20px">返回投票</a>
+    </li>
+</ul>
+<div class="container" id="register" style="margin-top: 1%">
+    <h2>点歌</h2>
+    <form>
+
+        <div class="mb-3">
+            <label for="song" class="form-label">请输入歌曲名称
+                <div v-if="songError" style="color:red">歌曲名称格式错误，请输入不超过100个字的歌曲名称</div>
+            </label>
+            <input type="text" class="form-control" id="song" v-model="song">
+        </div>
+        <div class="mb-3">
+            <label for="singer" class="form-label">请输入歌手姓名
+                <div v-if="singerError" style="color:red">歌手姓名格式错误，请输入不超过100个字的歌手名称</div>
+            </label>
+            <input type="text" class="form-control" id="singer" v-model="singer">
+        </div>
+        <div class="mb-3">
+            <label for="musicPlatform" class="form-label">请输入音乐平台
+                <div v-if="platformError" style="color:red">音乐平台格式错误，请输入不超过20个字的音乐平台</div>
+            </label>
+            <input type="text" class="form-control" id="musicPlatform" v-model="musicPlatform">
+        </div>
+        <div class="mb-3">
+            <label for="remarks" class="form-label">请输入备注（可选）</label>
+            <div v-if="remarksError" style="color:red">请输入不超过500字的备注</div>
+            <input type="text" class="form-control" id="remarks" v-model="remarks">
+        </div>
+        <button type="button" class="btn btn-primary" @click="addSong">点歌</button>
+    </form>
+</div>
+<script>
+    let url = local;
+    new Vue({
+        el: '#register',
+        data: {
+            song: '',
+            singer: '',
+            musicPlatform: '',
+            remarks: '',
+            songError: false,
+            singerError: false,
+            platformError: false,
+            remarksError: false,
+        },
+        methods: {
+            addSong() {
+                if (this.song === ''
+                    || this.singer === ''
+                    || this.platform === '') {
+                    alert("存在未填写的必填项，请检查是否全部输入")
+                    return
+                }
+                if (this.song.length <= 100
+                    && this.singer.length >= 0 && this.singer.length <= 100
+                    && this.musicPlatform.length >= 0 && this.musicPlatform.length <= 20
+                    && this.remarks.length <= 500
+                ) {
+                    console.log("addSong")
+                    $.ajax({
+                        url: url+'/song/addOneSong',
+                        type: 'post',
+                        contentType:"application/json",
+                        data: JSON.stringify({
+                            songName: this.song,
+                            singerName: this.singer,
+                            platformName: this.musicPlatform,
+                            remarks: this.remarks
+                        }),
+                        success: function (res) {
+                            console.log(res)
+                            alert("点歌成功")
+                            window.location.href="vote.html"
+                        }
+                    });
+                } else {
+                    alert("输入格式有误，请检查格式")
+                }
+            }
+        },
+        watch: {
+            song: function () {
+                this.songError = this.song.length > 100;
+            },
+            singer: function () {
+                this.singerError = !(this.singer.length >= 0 && this.singer.length <= 100);
+            },
+            musicPlatform: function () {
+                this.platformError = !(this.musicPlatform.length >= 0 && this.musicPlatform.length <= 20);
+            },
+            remarks: function () {
+                this.remarksError = !(this.remarks.length <= 500);
+            },
+        }
+    });
+</script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<!--JavaScript 尽量放在最后引入，避免 DOM 加载不完全带来的迷之问题-->
+</body>
+</html>

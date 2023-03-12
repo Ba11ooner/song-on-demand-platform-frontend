@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <script src="../js/vue.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/app.js"></script>
+    <title>注册页面</title>
+</head>
+<body>
+<ul class="nav" style="border: #0a53be 1px solid;border-radius: 10px;width: 6%;margin-left: 6%;margin-top: 1%">
+    <li class="nav-item">
+        <a class="nav-link" href="login.html" style="font-size: 20px">返回登录</a>
+    </li>
+</ul>
+<div class="container" id="register" style="margin-top: 1%">
+    <h2>用户注册</h2>
+    <form>
+
+        <div class="mb-3">
+            <label for="id" class="form-label">请输入学号/工号
+                <div v-if="idError" style="color:red">学号/工号格式错误</div>
+            </label>
+            <input type="text" class="form-control" id="id" v-model="id">
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">请输入姓名
+                <div v-if="nameError" style="color:red">姓名格式错误，请输入2到16个字的姓名</div>
+            </label>
+            <input type="text" class="form-control" id="name" v-model="name">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">请输入密码
+                <div v-if="passwordError" style="color:red">密码格式错误，请输入不含非法字符的8到20位的密码</div>
+            </label>
+            <input type="password" class="form-control" id="password" v-model="password">
+        </div>
+        <div class="mb-3">
+            <label for="checkedPassword" class="form-label">请再次输入密码
+                <div v-if="checkedPasswordError" style="color:red">两次密码不一致</div>
+            </label>
+            <input type="password" class="form-control" id="checkedPassword" v-model="checkedPassword">
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="exampleCheck1" v-model="isAgree">
+            <label class="form-check-label" for="exampleCheck1">注册即代表您已同意<a href="userAgreement.html">用户协议</a></label>
+        </div>
+        <button type="button" class="btn btn-primary" @click="register()">注册</button>
+    </form>
+</div>
+<script>
+    let url = local
+    new Vue({
+        el: '#register',
+        data: {
+            id: '',
+            name: '',
+            password: '',
+            checkedPassword: '',
+            isAgree: false,
+            idError: false,
+            nameError: false,
+            passwordError: false,
+            checkedPasswordError: false,
+            reg: new RegExp("[`~!@#$%^&*()+=|{}':;',\[\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]"),
+
+        },
+        methods: {
+            register() {
+                if (!this.isAgree) {
+                    alert("请勾选同意用户协议")
+                    return
+                }
+                if (this.id === ''
+                    || this.name === ''
+                    || this.password === ''
+                    || this.checkedPassword === '') {
+                    alert("存在未填项，请检查是否全部输入")
+                    return
+                }
+                if (this.id.length === 10
+                    && this.name.length >= 2 && this.name.length <= 16
+                    && this.password.length >= 8 && this.password.length <= 20
+                    && this.password === this.checkedPassword
+                    && !this.password.match(this.reg)
+                    && !this.checkedPassword.match(this.reg)
+                ) {
+                    console.log("register")
+                    $.ajax({
+                        url: url+'/user/register',
+                        type: 'post',
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            userAccount:this.id,
+                            username:this.name,
+                            password:this.password,
+                            checkedPassword:this.checkedPassword
+                        }),
+                        success: function (res) {
+                            alert("注册成功")
+                            window.location.href="login.html"
+                        }
+                    });
+                } else {
+                    alert("输入格式有误，请检查格式")
+                }
+            }
+        },
+        watch: {
+            id: function () {
+                this.idError = this.id.length !== 10;
+            },
+            name: function () {
+                this.nameError = !(this.name.length >= 2 && this.name.length <= 16);
+            },
+            password: function () {
+                this.passwordError = !(this.password.length >= 8 && this.password.length <= 20);
+                this.checkedPasswordError = this.password !== this.checkedPassword;
+                this.passwordError = !!this.password.match(this.reg);
+            },
+            checkedPassword: function () {
+                this.checkedPasswordError = this.password !== this.checkedPassword;
+                this.checkedPasswordError = !!this.checkedPassword.match(this.reg);
+            }
+        }
+    });
+</script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<!--JavaScript 尽量放在最后引入，避免 DOM 加载不完全带来的迷之问题-->
+</body>
+</html>

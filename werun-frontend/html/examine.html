@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/listContainer.css" rel="stylesheet">
+    <script src="../js/vue.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/app.js"></script>
+    <title>教师端主页</title>
+</head>
+<body>
+<div class="container" id="teacher">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div style="margin-left:auto;margin-right:auto;">
+                    <form class="d-flex">
+                        <input class="form-control me-2" style="width: 500px" type="search"
+                               placeholder="请输入歌曲名称以获取投票数量" aria-label="Search"
+                               v-model="songForSearch">
+                        <button class="btn btn-outline-success" type="button" @click="search">搜索</button>
+                    </form>
+                </div>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <div class="nav-link active" @click="logout">退出登录</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h2 style="width:20%;margin-left:auto;margin-right:auto;margin-top: 20px;text-align: center">待审核</h2>
+        <div class="box">
+            <div v-for="song in songList" class="card" style="border: black 2px solid;display: flex">
+                <div @click="setDone(song)">
+                    <div v-if="!song.isDone"><img style="width: 20px;height: 20px"
+                                                  src="../pic/finish-modified.png" alt=""/>
+                    </div>
+                    <div v-else><img style="width: 20px;height: 20px" src="../pic/finish.png" alt=""/></div>
+                </div>
+                <div class="card-title">{{song.songInfo.songname}}</div>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="border: black 1px solid;width: 40%;background: #0a53be">
+        <h2 style="width:200px;margin-left:auto;margin-right:auto;text-align: center;color: white" @click="exam">通过
+        </h2>
+    </div>
+</div>
+<script>
+    let url = local
+    //页面刷新时加载数据
+    let songList = []
+    new Promise((resolve) => {
+        window.onload = function () {
+            console.log("onload")
+            $.ajax({
+                url: url+"/song/getUnexaminedSongs",
+                type: 'get',
+                success(res) {
+                    console.log(res.data)
+                    let list = res.data;
+                    songList = new Array(list.length)
+                    for (let i = 0; i < list.length; i++) {
+                        songList[i] = {songInfo: list[i], isDone: false}
+                    }
+                    resolve(songList)
+                }
+            })
+        }
+    }).then(songList => {
+        new Vue({
+            el: '#teacher',
+            data: {
+                songList: songList,
+                songForSearch: ''
+            },
+            methods: {
+                exam() {
+                    console.log("exam")
+                    let selectedSongs = [];
+                    // 遍历选中的，拿到对应的 songName,再将 songName 列表传给 vote 函数
+                    for (let songListElement of this.songList) {
+                        if (songListElement.isDone === true) {//获得选中的
+                            console.log(songListElement.songInfo.songname)
+                            selectedSongs.push({"songname": songListElement.songInfo.songname,"songstatus":1})
+                        }else{//剩余的不通过
+                            console.log(songListElement.songInfo.songname)
+                            selectedSongs.push({"songname": songListElement.songInfo.songname,"songstatus":2})
+                        }
+                    }
+                    console.log(JSON.stringify({"songs": selectedSongs}))
+                    let songs = JSON.stringify({"songs": selectedSongs})
+                    $.ajax({
+                        url: url+"/song/examineSongs",
+                        type: 'post',
+                        contentType: 'application/json',
+                        data: songs,
+                        success(res) {
+                            console.log(res)
+                            alert("审核完成！")
+                            location.reload();
+                        }
+                    })
+                },
+                search() {
+                    console.log("search")
+                    let songForSearch = JSON.stringify({"songName": this.songForSearch})
+                    $.ajax({
+                        url: url+"/song/findOneSongForVotes",
+                        type: 'post',
+                        contentType: 'application/json',
+                        data: songForSearch,
+                        success(res) {
+                            console.log(res)
+                            let result = res
+                            // 判断是否为空
+                            if (result.code === 200) {
+                                console.log("search result:")
+                                console.log(result.data.songname)
+                                console.log(result.data.votes)
+                                alert("歌曲名称："+result.data.songname+"\n"+"歌曲票数"+result.data.votes)
+                            } else {
+                                alert("出错了，请检查歌曲名称")
+                            }
+                        }
+                    })
+                },
+                logout() {
+                    console.log("logout")
+                    $.ajax({
+                        url: url+"/user/logout",
+                        type: 'get',
+                        success(res) {
+                            console.log(res)
+                            window.location.replace("login.html")
+                        }
+                    })
+                },
+                setDone(song) {
+                    console.log('setDone')
+                    song.isDone = !song.isDone
+                    console.log("修改后：")
+                    console.log(song)
+                },
+            },
+        })
+    })
+</script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<!--JavaScript 尽量放在最后引入，避免 DOM 加载不完全带来的迷之问题-->
+</body>
+</html>

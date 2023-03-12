@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <script src="../js/vue.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/app.js"></script>
+    <title>登录页面</title>
+</head>
+<body>
+<div class="container" id="login" style="margin-top: 1%">
+    <h2>用户登录</h2>
+    <form>
+
+        <div class="mb-3">
+            <label for="id" class="form-label">请输入学号/工号
+                <div v-if="idError" style="color:red">学号/工号格式错误</div>
+            </label>
+            <input type="text" class="form-control" id="id" v-model="id">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">请输入密码
+                <div v-if="passwordError" style="color:red">密码格式错误，请输入不含非法字符的8到20位的密码</div>
+            </label>
+            <input type="password" class="form-control" id="password" v-model="password">
+        </div>
+        <button type="button" class="btn btn-primary" @click="login()">登录</button>
+<!--        <button type="button" class="btn btn-primary" @click="getUserState()">获取状态</button>-->
+    </form>
+    <a href="register.html">还没注册？点击注册</a>
+</div>
+<script>
+    //TODO 根据环境变化
+    let url = local
+    new Vue({
+        el: '#login',
+        data: {
+            id: '',
+            password: '',
+            idError: false,
+            passwordError: false,
+            reg: new RegExp("[`~!@#$%^&*()+=|{}':;',\[\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]"),
+
+        },
+        methods: {
+            //TODO 鉴权的事情暂时先放一放
+            getUserState() {
+                console.log("getUserState")
+                $.ajax({
+                    url: url+"/user/getUserState01",
+                    type: 'get',
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success(res) {
+                        console.log(res)
+                    }
+                })
+            },
+            login() {
+                if (this.id === '' || this.password === '') {
+                    alert("存在未填项，请检查是否全部输入")
+                    return
+                }
+                if (this.id.length === 10
+                    && this.password.length >= 8 && this.password.length <= 20
+                    && !this.password.match(this.reg)
+                ) {
+                    console.log("login")
+                    $.ajax({
+                        url: url+'/user/login',
+                        type: 'post',
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            userAccount: this.id,
+                            password: this.password
+                        }),
+                        success: function (res) {
+                            console.log(res)
+                            if(res.data.userrole===ADMIN_ROLE){
+                                window.location.href="examine.html"
+                            }else {
+                                window.location.href="vote.html"
+                            }
+                        }
+                    });
+                } else {
+                    alert("输入格式有误，请检查格式")
+                }
+            },
+        },
+        watch: {
+            id: function () {
+                this.idError = this.id.length !== 10;
+            },
+            password: function () {
+                this.passwordError = !(this.password.length >= 8 && this.password.length <= 20);
+            }
+        }
+    });
+</script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<!--JavaScript 尽量放在最后引入，避免 DOM 加载不完全带来的迷之问题-->
+</body>
+</html>
